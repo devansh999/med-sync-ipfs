@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Signup from './components/Signup';
 import Login from './components/Login';
 import { addDataToIPFS, getDataFromIPFS } from './services/IPFSService';
+import bcrypt from 'bcryptjs';
 
 function App() {
   const [currentUser, setCurrentUser] = useState(null);
@@ -9,32 +10,29 @@ function App() {
   const [ipfsHash, setIpfsHash] = useState('');
 
   const handleSignup = async (username, password) => {
-    const newUser = { username, password };
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { username, password: hashedPassword };
     const updatedUsers = { ...users, [username]: newUser };
     setUsers(updatedUsers);
 
     const cid = await addDataToIPFS(updatedUsers);
-    console.log("Data stored in IPFS with CID:", cid);
     setIpfsHash(cid);
   };
 
   const handleLogin = async (username, password) => {
-    if (!ipfsHash) {
-      alert('No users registered yet.');
+    if (!username || !password) {
+      alert('Username and password are required');
       return;
     }
 
     try {
       const storedUsers = await getDataFromIPFS(ipfsHash);
-      console.log("Stored users fetched from IPFS:", storedUsers);
       const user = storedUsers[username];
 
-      if (user && user.password === password) {
+      if (user && await bcrypt.compare(password, user.password)) {
         setCurrentUser(user);
-        console.log("Login successful:", user);
       } else {
         alert('Invalid username or password');
-        console.log("Login failed: Invalid username or password");
       }
     } catch (error) {
       console.error('Login error:', error);
