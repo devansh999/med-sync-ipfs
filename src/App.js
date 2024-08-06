@@ -1,23 +1,45 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState } from 'react';
+import Signup from './components/Signup';
+import Login from './Login';
+import { addDataToIPFS, getDataFromIPFS } from './services/IPFSService';
 
 function App() {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [users, setUsers] = useState({});
+  const [ipfsHash, setIpfsHash] = useState('');
+
+  const handleSignup = async (username, password) => {
+    const newUser = { username, password };
+    users[username] = newUser;
+    setUsers(users);
+
+    // Save users to IPFS
+    const cid = await addDataToIPFS(users);
+    setIpfsHash(cid);
+  };
+
+  const handleLogin = async (username) => {
+    // Fetch users from IPFS
+    const storedUsers = await getDataFromIPFS(ipfsHash);
+    const user = storedUsers[username];
+
+    if (user) {
+      setCurrentUser(user);
+    } else {
+      alert('User not found');
+    }
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {currentUser ? (
+        <h2>Welcome, {currentUser.username}!</h2>
+      ) : (
+        <div>
+          <Signup onSignup={handleSignup} />
+          <Login onLogin={handleLogin} />
+        </div>
+      )}
     </div>
   );
 }
