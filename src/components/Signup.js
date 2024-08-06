@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
-import { addDataToIPFS, getDataFromIPFS } from '../services/IPFSService';
 
-const Signup = () => {
+const Signup = ({ onSignup }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const [ipfsHash, setIpfsHash] = useState('');
+  const [signupStatus, setSignupStatus] = useState('');
 
   const handleSignup = async () => {
     try {
-      const userData = { username, password };
-      const hash = await addDataToIPFS(userData);
-      setIpfsHash(hash);
-      console.log('IPFS Hash:', hash);
-
-      // Optionally, fetch the data back to verify
-      const fetchedData = await getDataFromIPFS(hash);
-      console.log('Fetched Data:', fetchedData);
+      await onSignup(username, password);
+      setSignupStatus('Signup successful!');
     } catch (error) {
       console.error('Signup error:', error);
+      setSignupStatus('Signup failed.');
     }
   };
 
@@ -37,7 +31,7 @@ const Signup = () => {
         placeholder="Password"
       />
       <button onClick={handleSignup}>Sign Up</button>
-      {ipfsHash && <p>IPFS Hash: {ipfsHash}</p>}
+      {signupStatus && <p>{signupStatus}</p>}
     </div>
   );
 };

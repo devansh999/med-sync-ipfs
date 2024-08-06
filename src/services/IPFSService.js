@@ -1,4 +1,3 @@
-// src/services/IPFSService.js
 import { create } from 'ipfs-http-client';
 
 const ipfs = create({ url: 'http://localhost:5001' });
@@ -19,12 +18,10 @@ export const getDataFromIPFS = async (cid) => {
     let data = '';
 
     for await (const chunk of stream) {
-      data += new TextDecoder().decode(chunk, { stream: true });
+      data += new TextDecoder().decode(chunk);
     }
 
-    data += new TextDecoder().decode(); // flush the decoder
-    console.log('Raw data fetched from IPFS:', data);
-
+    console.log("Raw data fetched from IPFS:", data);
     return JSON.parse(data);
   } catch (error) {
     console.error('Error fetching data from IPFS:', error);

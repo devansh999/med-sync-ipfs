@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Signup from './components/Signup';
-import Login from './Login';
+import Login from './components/Login';
 import { addDataToIPFS, getDataFromIPFS } from './services/IPFSService';
 
 function App() {
@@ -10,23 +10,35 @@ function App() {
 
   const handleSignup = async (username, password) => {
     const newUser = { username, password };
-    users[username] = newUser;
-    setUsers(users);
+    const updatedUsers = { ...users, [username]: newUser };
+    setUsers(updatedUsers);
 
-    // Save users to IPFS
-    const cid = await addDataToIPFS(users);
+    const cid = await addDataToIPFS(updatedUsers);
+    console.log("Data stored in IPFS with CID:", cid);
     setIpfsHash(cid);
   };
 
-  const handleLogin = async (username) => {
-    // Fetch users from IPFS
-    const storedUsers = await getDataFromIPFS(ipfsHash);
-    const user = storedUsers[username];
+  const handleLogin = async (username, password) => {
+    if (!ipfsHash) {
+      alert('No users registered yet.');
+      return;
+    }
 
-    if (user) {
-      setCurrentUser(user);
-    } else {
-      alert('User not found');
+    try {
+      const storedUsers = await getDataFromIPFS(ipfsHash);
+      console.log("Stored users fetched from IPFS:", storedUsers);
+      const user = storedUsers[username];
+
+      if (user && user.password === password) {
+        setCurrentUser(user);
+        console.log("Login successful:", user);
+      } else {
+        alert('Invalid username or password');
+        console.log("Login failed: Invalid username or password");
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed');
     }
   };
 
